@@ -2,8 +2,14 @@ import os
 from flask import Flask, request
 from slackclient import SlackClient
 from pprint import pprint
+import json
 
-token = os.environ["SLACK_API_TOKEN"]
+with open('./api_tokens.json') as data_file:
+    token = json.load(data_file)['token']
+
+pprint(token)
+
+scope = "read"
 
 sc = SlackClient(token)
 
@@ -15,9 +21,11 @@ sc = SlackClient(token)
 
 channel_list = sc.api_call(
                       "channels.list",
-                      types="private_channel")
+                      types="private_channel",
+                      scope="read")
 
-pprint([c['is_private'] for c in channel_list['channels']])
+# pprint([c['is_private'] for c in channel_list['channels']])
+pprint(channel_list)
 
 
 # sc.api_call(
