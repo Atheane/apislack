@@ -3,32 +3,36 @@ from flask import Flask, request
 from slackclient import SlackClient
 from pprint import pprint
 import json
+import requests
+
 
 with open('./api_tokens.json') as data_file:
-    token = json.load(data_file)['token']
+    credentials = json.load(data_file)
 
-pprint(token)
-
-scope = "read"
+token = credentials['token']
 
 sc = SlackClient(token)
 
-# sc.api_call(
-#   "chat.postMessage",
-#   channel="#general",
-#   text="Hello from Python! :tada:"
-# )
+dev_channels = ['bash', 'html-css3']
 
 channel_list = sc.api_call(
-                      "channels.list",
+                      "conversations.list",
                       types="private_channel",
-                      scope="read")
+                      exclude_archived=1
+                      )
 
-# pprint([c['is_private'] for c in channel_list['channels']])
-pprint(channel_list)
+channels = { c['id']:c['name'] for c in channel_list['channels']}
+
+messages = {}
+
+for (k,v) in channels.items():
+  messages[v] = sorted(sc.api_call(
+                            "conversations.history",
+                             channel=k,
+                             limit = 20
+                            )['messages'], key= lambda d: d['ts'])
 
 
-# sc.api_call(
-#   "channels.info",
-#   channel=""
-# )
+test = [ m['file']['preview'] if 'file' in m else m['text']  \
+                     for m in messages['react'] ]
+print(test)
